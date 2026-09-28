@@ -11,7 +11,7 @@ Commit at the end of every checkpoint.
 | CP3 — API Security | 20 | `pytest tests/test_cp3.py -v` | ✅ 22/22 |
 | CP4 — Scaling & Reliability | 20 | `pytest tests/test_cp4.py -v` | ✅ 19/19 |
 | CP5 — Cloud Deployment | 15 | `pytest tests/test_cp5.py -v` | ✅ 9/9 (Railway) |
-| exercises.md | 15 | `python grade.py` | ⬜ |
+| exercises.md | 15 | `python grade.py` | ✅ 10/10 |
 | Bonus — CI/CD | +10 | `pytest tests/test_bonus_cicd.py -v` | ⬜ |
 
 ---
@@ -157,8 +157,8 @@ Commit at the end of every checkpoint.
 - [x] Remove every `(điền ...)` placeholder, including the fallback section if unused
 
 **Evidence**
-- [ ] `screenshots/dashboard.png`
-- [ ] `screenshots/health.png`
+- [x] `screenshots/dashboard.png`
+- [x] `screenshots/health.png`
 - [x] (Optional) `DEPLOY_API_KEY=...` in local `.env` for the authenticated test
 
 **Verify**
@@ -169,17 +169,17 @@ _Fallback only if cloud is impossible:_ `LOCAL_FALLBACK=true` in `.env`, `docker
 
 ## exercises.md (15) — answer in your own words
 
-- [ ] Fill name + mã học viên at the top
-- [ ] Q1 — Fail fast
-- [ ] Q2 — Machine-readable logs (paste a real JSON log line)
-- [ ] Q3 — Image size (real single vs multi-stage numbers)
-- [ ] Q4 — Dockerfile layer order / cache
-- [ ] Q5 — Why not run as root
-- [ ] Q6 — Sliding window vs fixed minute
-- [ ] Q7 — Rate limit vs cost guard
-- [ ] Q8 — `/health` vs `/ready`
-- [ ] Q9 — Stateless (`history_length` observation)
-- [ ] Q10 — A real deploy error and how you fixed it
+- [x] Fill name + mã học viên at the top
+- [x] Q1 — Fail fast
+- [x] Q2 — Machine-readable logs (paste a real JSON log line)
+- [x] Q3 — Image size (real single vs multi-stage numbers)
+- [x] Q4 — Dockerfile layer order / cache
+- [x] Q5 — Why not run as root
+- [x] Q6 — Sliding window vs fixed minute
+- [x] Q7 — Rate limit vs cost guard
+- [x] Q8 — `/health` vs `/ready`
+- [x] Q9 — Stateless (`history_length` observation)
+- [x] Q10 — A real deploy error and how you fixed it
 
 ## Bonus — CI/CD with GitHub Actions (+10)
 
