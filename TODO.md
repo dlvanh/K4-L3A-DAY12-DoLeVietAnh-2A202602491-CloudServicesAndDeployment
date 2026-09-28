@@ -10,7 +10,7 @@ Commit at the end of every checkpoint.
 | CP2 — Docker | 15 | `pytest tests/test_cp2.py -v` | ✅ 16/16 |
 | CP3 — API Security | 20 | `pytest tests/test_cp3.py -v` | ✅ 22/22 |
 | CP4 — Scaling & Reliability | 20 | `pytest tests/test_cp4.py -v` | ✅ 19/19 |
-| CP5 — Cloud Deployment | 15 | `pytest tests/test_cp5.py -v` | ⬜ |
+| CP5 — Cloud Deployment | 15 | `pytest tests/test_cp5.py -v` | ✅ 9/9 (Railway) |
 | exercises.md | 15 | `python grade.py` | ⬜ |
 | Bonus — CI/CD | +10 | `pytest tests/test_bonus_cicd.py -v` | ⬜ |
 
@@ -53,7 +53,7 @@ Commit at the end of every checkpoint.
 ## CP2 — Docker (15)
 
 **Before editing**
-- [ ] Record the single-stage image size (for exercise Q3):
+- [x] Record the single-stage image size (for exercise Q3): **1.73 GB** single-stage vs **271 MB** multi-stage
       `git show 1bf8ea5:Dockerfile | docker build -f - -t agent:single .`
 
 **`Dockerfile`**
@@ -143,27 +143,27 @@ Commit at the end of every checkpoint.
 ## CP5 — Cloud Deployment (15)
 
 **Deploy (Railway or Render)**
-- [ ] Create platform account
-- [ ] Create Redis instance and attach `REDIS_URL` to the agent service
-- [ ] Set `AGENT_API_KEY`, `RATE_LIMIT_PER_MINUTE`, `MONTHLY_BUDGET_USD`, `LOG_LEVEL` in the dashboard (don't set `PORT`)
-- [ ] Deploy from Dockerfile and generate a public HTTPS domain
-- [ ] `/health` → 200, `/ready` → 200, `/ask` without key → 401, with key → 200, rate limit → 429
+- [x] Create platform account
+- [x] Create Redis instance and attach `REDIS_URL` to the agent service
+- [x] Set `AGENT_API_KEY`, `RATE_LIMIT_PER_MINUTE`, `MONTHLY_BUDGET_USD`, `LOG_LEVEL` in the dashboard (don't set `PORT`)
+- [x] Deploy from Dockerfile and generate a public HTTPS domain → https://agent-production-218e.up.railway.app
+- [x] `/health` → 200, `/ready` → 200, `/ask` without key → 401, with key → 200, rate limit → 429
 
 **`DEPLOYMENT.md`**
-- [ ] Student info (name, mã học viên, repo link)
-- [ ] Real Public URL, platform, deploy date
-- [ ] Env var table: names + source only, no values
-- [ ] Paste real command output (key not expanded)
-- [ ] Remove every `(điền ...)` placeholder, including the fallback section if unused
+- [x] Student info (name, mã học viên, repo link)
+- [x] Real Public URL, platform, deploy date
+- [x] Env var table: names + source only, no values
+- [x] Paste real command output (key not expanded)
+- [x] Remove every `(điền ...)` placeholder, including the fallback section if unused
 
 **Evidence**
 - [ ] `screenshots/dashboard.png`
 - [ ] `screenshots/health.png`
-- [ ] (Optional) `DEPLOY_API_KEY=...` in local `.env` for the authenticated test
+- [x] (Optional) `DEPLOY_API_KEY=...` in local `.env` for the authenticated test
 
 **Verify**
-- [ ] `pytest tests/test_cp5.py -v` all green
-- [ ] Commit: "Checkpoint 5"
+- [x] `pytest tests/test_cp5.py -v` all green
+- [x] Commit: "Checkpoint 5"
 
 _Fallback only if cloud is impossible:_ `LOCAL_FALLBACK=true` in `.env`, `docker compose up -d`, screenshots, write reason in DEPLOYMENT.md (CP5 capped at 9/15).
 
