@@ -8,7 +8,7 @@ Commit at the end of every checkpoint.
 | CP0 — Setup | — | `pytest tests/ -v -m "not docker"` runs | ✅ |
 | CP1 — Config, Health & Logging | 15 | `pytest tests/test_cp1.py -v` | ✅ 13/13 |
 | CP2 — Docker | 15 | `pytest tests/test_cp2.py -v` | ✅ 16/16 |
-| CP3 — API Security | 20 | `pytest tests/test_cp3.py -v` | ⬜ |
+| CP3 — API Security | 20 | `pytest tests/test_cp3.py -v` | ✅ 22/22 |
 | CP4 — Scaling & Reliability | 20 | `pytest tests/test_cp4.py -v` | ⬜ |
 | CP5 — Cloud Deployment | 15 | `pytest tests/test_cp5.py -v` | ⬜ |
 | exercises.md | 15 | `python grade.py` | ⬜ |
@@ -88,34 +88,34 @@ Commit at the end of every checkpoint.
 ## CP3 — API Security (20)
 
 **`app/auth.py`**
-- [ ] Compare key with `secrets.compare_digest`
-- [ ] Missing/wrong key → 401 `"invalid or missing API key"`
-- [ ] Return `x_user_id` or `ANONYMOUS_USER`
+- [x] Compare key with `secrets.compare_digest`
+- [x] Missing/wrong key → 401 `"invalid or missing API key"`
+- [x] Return `x_user_id` or `ANONYMOUS_USER`
 
 **`app/rate_limiter.py`**
-- [ ] `hit_count`: honour `now`, `zremrangebyscore(key, 0, now - 60)`, return `zcard`
-- [ ] `check`: count first; `>= limit` → 429 with `Retry-After: 60`
-- [ ] Then `zadd` a unique member (`f"{now}:{uuid4().hex}"`) and `expire(key, 60)`
+- [x] `hit_count`: honour `now`, `zremrangebyscore(key, 0, now - 60)`, return `zcard`
+- [x] `check`: count first; `>= limit` → 429 with `Retry-After: 60`
+- [x] Then `zadd` a unique member (`f"{now}:{uuid4().hex}"`) and `expire(key, 60)`
 
 **`app/cost_guard.py`**
-- [ ] `spent`: `None` → `0.0`, otherwise `float(...)`
-- [ ] `check`: `spent + estimated_cost > budget` → 402 `"monthly budget exceeded"`
-- [ ] `record`: `incrbyfloat` + `expire(KEY_TTL_SECONDS)`, return `float(total)`
+- [x] `spent`: `None` → `0.0`, otherwise `float(...)`
+- [x] `check`: `spent + estimated_cost > budget` → 402 `"monthly budget exceeded"`
+- [x] `record`: `incrbyfloat` + `expire(KEY_TTL_SECONDS)`, return `float(total)`
 
 **`app/main.py` — `/ask`** (in this exact order)
-- [ ] `limiter.check(user_id)`
-- [ ] `guard.check(user_id)`
-- [ ] `history = store.get_history(user_id)`
-- [ ] `result = ask_llm(payload.question, history)`
-- [ ] `store.append` user question + assistant answer
-- [ ] `guard.record(user_id, result["cost_usd"])`
-- [ ] `log_event("ask_completed", ...)`
-- [ ] Return `answer`, `user_id`, `history_length`, `cost_usd`, `tokens{in,out}`
+- [x] `limiter.check(user_id)`
+- [x] `guard.check(user_id)`
+- [x] `history = store.get_history(user_id)`
+- [x] `result = ask_llm(payload.question, history)`
+- [x] `store.append` user question + assistant answer
+- [x] `guard.record(user_id, result["cost_usd"])`
+- [x] `log_event("ask_completed", ...)`
+- [x] Return `answer`, `user_id`, `history_length`, `cost_usd`, `tokens{in,out}`
 
 **Verify**
-- [ ] curl without key → 401; with key → 200; 15 calls → last ones 429
-- [ ] `pytest tests/test_cp3.py -v` all green
-- [ ] Commit: "Checkpoint 3"
+- [x] curl without key → 401; with key → 200; 15 calls → last ones 429
+- [x] `pytest tests/test_cp3.py -v` all green
+- [x] Commit: "Checkpoint 3"
 
 ## CP4 — Scaling & Reliability (20)
 
