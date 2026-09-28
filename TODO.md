@@ -7,7 +7,7 @@ Commit at the end of every checkpoint.
 |---|---:|---|---|
 | CP0 — Setup | — | `pytest tests/ -v -m "not docker"` runs | ✅ |
 | CP1 — Config, Health & Logging | 15 | `pytest tests/test_cp1.py -v` | ✅ 13/13 |
-| CP2 — Docker | 15 | `pytest tests/test_cp2.py -v` | ⬜ |
+| CP2 — Docker | 15 | `pytest tests/test_cp2.py -v` | ✅ 16/16 |
 | CP3 — API Security | 20 | `pytest tests/test_cp3.py -v` | ⬜ |
 | CP4 — Scaling & Reliability | 20 | `pytest tests/test_cp4.py -v` | ⬜ |
 | CP5 — Cloud Deployment | 15 | `pytest tests/test_cp5.py -v` | ⬜ |
@@ -57,33 +57,33 @@ Commit at the end of every checkpoint.
       `git show 1bf8ea5:Dockerfile | docker build -f - -t agent:single .`
 
 **`Dockerfile`**
-- [ ] Multi-stage: `FROM python:3.11-slim AS builder` + a runtime stage
-- [ ] Slim base image for both stages
-- [ ] `COPY requirements.txt .` before `pip install --no-cache-dir --prefix=/install ...`
-- [ ] Runtime: `COPY --from=builder /install /usr/local`
-- [ ] Copy source (`app`, `utils`) after installing dependencies
-- [ ] Create non-root user and switch with `USER appuser`
-- [ ] `HEALTHCHECK` calling `/health` (via python `urllib`, no curl in slim)
-- [ ] `CMD` binds `0.0.0.0` and reads `${PORT:-8000}`
-- [ ] No secrets / `AGENT_API_KEY=` / `password` in the file
+- [x] Multi-stage: `FROM python:3.11-slim AS builder` + a runtime stage
+- [x] Slim base image for both stages
+- [x] `COPY requirements.txt .` before `pip install --no-cache-dir --prefix=/install ...`
+- [x] Runtime: `COPY --from=builder /install /usr/local`
+- [x] Copy source (`app`, `utils`) after installing dependencies
+- [x] Create non-root user and switch with `USER appuser`
+- [x] `HEALTHCHECK` calling `/health` (via python `urllib`, no curl in slim)
+- [x] `CMD` binds `0.0.0.0` and reads `${PORT:-8000}`
+- [x] No secrets / `AGENT_API_KEY=` / `password` in the file
 
 **`.dockerignore`**
-- [ ] Add `.env`, `__pycache__`, `.git`, `.venv` (plus e.g. `tests`, `screenshots`, `*.md`)
-- [ ] Do NOT ignore `app`, `utils`, `requirements.txt`
+- [x] Add `.env`, `__pycache__`, `.git`, `.venv` (plus e.g. `tests`, `screenshots`, `*.md`)
+- [x] Do NOT ignore `app`, `utils`, `requirements.txt`
 
 **`docker-compose.yml` — service `agent`**
-- [ ] `build: .`
-- [ ] `ports: "8000:8000"`
-- [ ] `AGENT_API_KEY: ${AGENT_API_KEY}` (interpolated, not hardcoded)
-- [ ] `REDIS_URL: redis://redis:6379/0`
-- [ ] `depends_on: redis`
-- [ ] `healthcheck` calling `/health`
+- [x] `build: .`
+- [x] `ports: "8000:8000"`
+- [x] `AGENT_API_KEY: ${AGENT_API_KEY}` (interpolated, not hardcoded)
+- [x] `REDIS_URL: redis://redis:6379/0`
+- [x] `depends_on: redis`
+- [x] `healthcheck` calling `/health`
 
 **Verify**
-- [ ] `docker build -t day12-agent:prod .` succeeds; `docker images day12-agent:prod` < 500 MB (note size for Q3)
-- [ ] `docker compose up -d` → `curl.exe http://localhost:8000/health` returns 200
-- [ ] `pytest tests/test_cp2.py -v` all green (including real build tests)
-- [ ] Commit: "Checkpoint 2"
+- [x] `docker build -t day12-agent:prod .` succeeds; `docker images day12-agent:prod` < 500 MB (note size for Q3) — **271 MB**
+- [ ] `docker compose up -d` → `curl.exe http://localhost:8000/health` returns 200 _(blocked until CP4: startup calls `lifecycle.install()`)_
+- [x] `pytest tests/test_cp2.py -v` all green (including real build tests)
+- [x] Commit: "Checkpoint 2"
 
 ## CP3 — API Security (20)
 
