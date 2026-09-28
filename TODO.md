@@ -1,0 +1,204 @@
+# TODO — K4 L3A Day 12: Cloud Services & Deployment
+
+Tick `[x]` as you go. Details for each item: [CLAUDE.md](CLAUDE.md) and [LAB_GUIDE.md](LAB_GUIDE.md).
+Commit at the end of every checkpoint.
+
+| Checkpoint | Points | Check command | Status |
+|---|---:|---|---|
+| CP0 — Setup | — | `pytest tests/ -v -m "not docker"` runs | ✅ |
+| CP1 — Config, Health & Logging | 15 | `pytest tests/test_cp1.py -v` | ✅ 13/13 |
+| CP2 — Docker | 15 | `pytest tests/test_cp2.py -v` | ⬜ |
+| CP3 — API Security | 20 | `pytest tests/test_cp3.py -v` | ⬜ |
+| CP4 — Scaling & Reliability | 20 | `pytest tests/test_cp4.py -v` | ⬜ |
+| CP5 — Cloud Deployment | 15 | `pytest tests/test_cp5.py -v` | ⬜ |
+| exercises.md | 15 | `python grade.py` | ⬜ |
+| Bonus — CI/CD | +10 | `pytest tests/test_bonus_cicd.py -v` | ⬜ |
+
+---
+
+## CP0 — Setup
+
+- [x] Create venv and activate it (`python -m venv .venv; .venv\Scripts\Activate.ps1`)
+- [x] `pip install -r requirements.txt`
+- [x] `copy .env.example .env`
+- [x] Generate a key and set `AGENT_API_KEY` in `.env`
+- [x] Start Redis: `docker compose up -d redis` (or set `REDIS_URL=fake://`)
+- [x] `pytest tests/ -v -m "not docker"` runs without `ModuleNotFoundError`
+- [x] Commit: "Checkpoint 0"
+
+## CP1 — 12-Factor Config, Health & Logging (15)
+
+**`app/config.py`**
+- [x] Declare `port: int = 8000`
+- [x] Declare `agent_api_key: str` (no default → fail fast)
+- [x] Declare `redis_url: str = "redis://localhost:6379/0"`
+- [x] Declare `rate_limit_per_minute: int = 10`
+- [x] Declare `monthly_budget_usd: float = 10.0`
+- [x] Declare `log_level: str = "INFO"`
+
+**`app/logging_utils.py`**
+- [x] `log_event` builds a dict with `event`, lowercase `level`, `timestamp` + `**fields`
+- [x] Prints one-line JSON (`ensure_ascii=False`, no `indent`) and returns it
+
+**`app/main.py` — `/health`**
+- [x] No parameters in `health()`
+- [x] `lifecycle.shutting_down` → 503 `{"status": "shutting_down"}`
+- [x] Otherwise 200 `{"status": "ok", "service", "version"}`
+
+**Verify**
+- [x] `uvicorn app.main:app --reload --port 8000` + `curl.exe -i http://localhost:8000/health`
+- [x] `pytest tests/test_cp1.py -v` all green
+- [x] Commit: "Checkpoint 1"
+
+## CP2 — Docker (15)
+
+**Before editing**
+- [ ] Record the single-stage image size (for exercise Q3):
+      `git show 1bf8ea5:Dockerfile | docker build -f - -t agent:single .`
+
+**`Dockerfile`**
+- [ ] Multi-stage: `FROM python:3.11-slim AS builder` + a runtime stage
+- [ ] Slim base image for both stages
+- [ ] `COPY requirements.txt .` before `pip install --no-cache-dir --prefix=/install ...`
+- [ ] Runtime: `COPY --from=builder /install /usr/local`
+- [ ] Copy source (`app`, `utils`) after installing dependencies
+- [ ] Create non-root user and switch with `USER appuser`
+- [ ] `HEALTHCHECK` calling `/health` (via python `urllib`, no curl in slim)
+- [ ] `CMD` binds `0.0.0.0` and reads `${PORT:-8000}`
+- [ ] No secrets / `AGENT_API_KEY=` / `password` in the file
+
+**`.dockerignore`**
+- [ ] Add `.env`, `__pycache__`, `.git`, `.venv` (plus e.g. `tests`, `screenshots`, `*.md`)
+- [ ] Do NOT ignore `app`, `utils`, `requirements.txt`
+
+**`docker-compose.yml` — service `agent`**
+- [ ] `build: .`
+- [ ] `ports: "8000:8000"`
+- [ ] `AGENT_API_KEY: ${AGENT_API_KEY}` (interpolated, not hardcoded)
+- [ ] `REDIS_URL: redis://redis:6379/0`
+- [ ] `depends_on: redis`
+- [ ] `healthcheck` calling `/health`
+
+**Verify**
+- [ ] `docker build -t day12-agent:prod .` succeeds; `docker images day12-agent:prod` < 500 MB (note size for Q3)
+- [ ] `docker compose up -d` → `curl.exe http://localhost:8000/health` returns 200
+- [ ] `pytest tests/test_cp2.py -v` all green (including real build tests)
+- [ ] Commit: "Checkpoint 2"
+
+## CP3 — API Security (20)
+
+**`app/auth.py`**
+- [ ] Compare key with `secrets.compare_digest`
+- [ ] Missing/wrong key → 401 `"invalid or missing API key"`
+- [ ] Return `x_user_id` or `ANONYMOUS_USER`
+
+**`app/rate_limiter.py`**
+- [ ] `hit_count`: honour `now`, `zremrangebyscore(key, 0, now - 60)`, return `zcard`
+- [ ] `check`: count first; `>= limit` → 429 with `Retry-After: 60`
+- [ ] Then `zadd` a unique member (`f"{now}:{uuid4().hex}"`) and `expire(key, 60)`
+
+**`app/cost_guard.py`**
+- [ ] `spent`: `None` → `0.0`, otherwise `float(...)`
+- [ ] `check`: `spent + estimated_cost > budget` → 402 `"monthly budget exceeded"`
+- [ ] `record`: `incrbyfloat` + `expire(KEY_TTL_SECONDS)`, return `float(total)`
+
+**`app/main.py` — `/ask`** (in this exact order)
+- [ ] `limiter.check(user_id)`
+- [ ] `guard.check(user_id)`
+- [ ] `history = store.get_history(user_id)`
+- [ ] `result = ask_llm(payload.question, history)`
+- [ ] `store.append` user question + assistant answer
+- [ ] `guard.record(user_id, result["cost_usd"])`
+- [ ] `log_event("ask_completed", ...)`
+- [ ] Return `answer`, `user_id`, `history_length`, `cost_usd`, `tokens{in,out}`
+
+**Verify**
+- [ ] curl without key → 401; with key → 200; 15 calls → last ones 429
+- [ ] `pytest tests/test_cp3.py -v` all green
+- [ ] Commit: "Checkpoint 3"
+
+## CP4 — Scaling & Reliability (20)
+
+**`app/store.py`**
+- [ ] `ping`: `client.ping()` in try/except → `True`/`False`
+- [ ] `append`: `rpush` JSON, `ltrim(key, -HISTORY_MAX_MESSAGES, -1)`, `expire(HISTORY_TTL_SECONDS)`
+- [ ] `get_history`: `lrange(key, 0, -1)` + `json.loads` each (empty → `[]`)
+- [ ] No global dict/list holding state in `main.py` / `store.py`
+
+**`app/main.py` — `/ready`**
+- [ ] Shutting down → 503 `{"status": "shutting_down"}`
+- [ ] `not store.ping()` → 503 `{"status": "not ready", "redis": False}`
+- [ ] Otherwise 200 `{"status": "ready", "redis": True}`
+
+**`app/lifecycle.py`**
+- [ ] `install`: save `signal.getsignal(sig)` then `signal.signal(sig, self.request_shutdown)` for SIGTERM + SIGINT
+- [ ] `request_shutdown`: set `shutting_down = True`, call previous handler if `callable`
+
+**Verify**
+- [ ] `pytest tests/test_cp4.py -v` all green
+- [ ] (Optional) scale to 3 agents behind nginx; `history_length` keeps increasing (note for Q9)
+- [ ] No `NotImplementedError` left: `grep -rn NotImplementedError app/`
+- [ ] Commit: "Checkpoint 4"
+
+## CP5 — Cloud Deployment (15)
+
+**Deploy (Railway or Render)**
+- [ ] Create platform account
+- [ ] Create Redis instance and attach `REDIS_URL` to the agent service
+- [ ] Set `AGENT_API_KEY`, `RATE_LIMIT_PER_MINUTE`, `MONTHLY_BUDGET_USD`, `LOG_LEVEL` in the dashboard (don't set `PORT`)
+- [ ] Deploy from Dockerfile and generate a public HTTPS domain
+- [ ] `/health` → 200, `/ready` → 200, `/ask` without key → 401, with key → 200, rate limit → 429
+
+**`DEPLOYMENT.md`**
+- [ ] Student info (name, mã học viên, repo link)
+- [ ] Real Public URL, platform, deploy date
+- [ ] Env var table: names + source only, no values
+- [ ] Paste real command output (key not expanded)
+- [ ] Remove every `(điền ...)` placeholder, including the fallback section if unused
+
+**Evidence**
+- [ ] `screenshots/dashboard.png`
+- [ ] `screenshots/health.png`
+- [ ] (Optional) `DEPLOY_API_KEY=...` in local `.env` for the authenticated test
+
+**Verify**
+- [ ] `pytest tests/test_cp5.py -v` all green
+- [ ] Commit: "Checkpoint 5"
+
+_Fallback only if cloud is impossible:_ `LOCAL_FALLBACK=true` in `.env`, `docker compose up -d`, screenshots, write reason in DEPLOYMENT.md (CP5 capped at 9/15).
+
+## exercises.md (15) — answer in your own words
+
+- [ ] Fill name + mã học viên at the top
+- [ ] Q1 — Fail fast
+- [ ] Q2 — Machine-readable logs (paste a real JSON log line)
+- [ ] Q3 — Image size (real single vs multi-stage numbers)
+- [ ] Q4 — Dockerfile layer order / cache
+- [ ] Q5 — Why not run as root
+- [ ] Q6 — Sliding window vs fixed minute
+- [ ] Q7 — Rate limit vs cost guard
+- [ ] Q8 — `/health` vs `/ready`
+- [ ] Q9 — Stateless (`history_length` observation)
+- [ ] Q10 — A real deploy error and how you fixed it
+
+## Bonus — CI/CD with GitHub Actions (+10)
+
+- [ ] Create `.github/workflows/ci.yml`
+- [ ] Trigger on `push` and `pull_request` to `main`
+- [ ] `test` job: checkout → setup-python → `pip install -r requirements.txt` → `pytest ... --ignore=tests/test_cp5.py --ignore=tests/test_bonus_cicd.py`
+- [ ] `build` job: `docker build`
+- [ ] `deploy` job with `needs: [test, build]` and `if:` main + push only
+- [ ] Deploy token in GitHub Secrets, referenced as `${{ secrets.* }}`
+- [ ] All actions pinned (`@v4`, not `@main`)
+- [ ] Smoke test `curl -fsS` on `/health` after deploy
+- [ ] CI badge at the top of README.md
+- [ ] Workflow green on GitHub; `pytest tests/test_bonus_cicd.py -v` all green
+
+## Final submission
+
+- [ ] `python grade.py` ≥ 75 (target 90+); every remaining failure understood
+- [ ] `.env` not tracked: `git ls-files | grep -E '(^|/)\.env$|\.(pem|key)$'` returns nothing
+- [ ] No secret values in DEPLOYMENT.md, workflow, compose, or code
+- [ ] Commits spread across checkpoints
+- [ ] Repo is public; push final commit
+- [ ] Submit repo link on Codelab
