@@ -9,7 +9,7 @@ Commit at the end of every checkpoint.
 | CP1 — Config, Health & Logging | 15 | `pytest tests/test_cp1.py -v` | ✅ 13/13 |
 | CP2 — Docker | 15 | `pytest tests/test_cp2.py -v` | ✅ 16/16 |
 | CP3 — API Security | 20 | `pytest tests/test_cp3.py -v` | ✅ 22/22 |
-| CP4 — Scaling & Reliability | 20 | `pytest tests/test_cp4.py -v` | ⬜ |
+| CP4 — Scaling & Reliability | 20 | `pytest tests/test_cp4.py -v` | ✅ 19/19 |
 | CP5 — Cloud Deployment | 15 | `pytest tests/test_cp5.py -v` | ⬜ |
 | exercises.md | 15 | `python grade.py` | ⬜ |
 | Bonus — CI/CD | +10 | `pytest tests/test_bonus_cicd.py -v` | ⬜ |
@@ -81,7 +81,7 @@ Commit at the end of every checkpoint.
 
 **Verify**
 - [x] `docker build -t day12-agent:prod .` succeeds; `docker images day12-agent:prod` < 500 MB (note size for Q3) — **271 MB**
-- [ ] `docker compose up -d` → `curl.exe http://localhost:8000/health` returns 200 _(blocked until CP4: startup calls `lifecycle.install()`)_
+- [x] `docker compose up -d` → `curl.exe http://localhost:8000/health` returns 200 (verified after CP4)
 - [x] `pytest tests/test_cp2.py -v` all green (including real build tests)
 - [x] Commit: "Checkpoint 2"
 
@@ -120,25 +120,25 @@ Commit at the end of every checkpoint.
 ## CP4 — Scaling & Reliability (20)
 
 **`app/store.py`**
-- [ ] `ping`: `client.ping()` in try/except → `True`/`False`
-- [ ] `append`: `rpush` JSON, `ltrim(key, -HISTORY_MAX_MESSAGES, -1)`, `expire(HISTORY_TTL_SECONDS)`
-- [ ] `get_history`: `lrange(key, 0, -1)` + `json.loads` each (empty → `[]`)
-- [ ] No global dict/list holding state in `main.py` / `store.py`
+- [x] `ping`: `client.ping()` in try/except → `True`/`False`
+- [x] `append`: `rpush` JSON, `ltrim(key, -HISTORY_MAX_MESSAGES, -1)`, `expire(HISTORY_TTL_SECONDS)`
+- [x] `get_history`: `lrange(key, 0, -1)` + `json.loads` each (empty → `[]`)
+- [x] No global dict/list holding state in `main.py` / `store.py`
 
 **`app/main.py` — `/ready`**
-- [ ] Shutting down → 503 `{"status": "shutting_down"}`
-- [ ] `not store.ping()` → 503 `{"status": "not ready", "redis": False}`
-- [ ] Otherwise 200 `{"status": "ready", "redis": True}`
+- [x] Shutting down → 503 `{"status": "shutting_down"}`
+- [x] `not store.ping()` → 503 `{"status": "not ready", "redis": False}`
+- [x] Otherwise 200 `{"status": "ready", "redis": True}`
 
 **`app/lifecycle.py`**
-- [ ] `install`: save `signal.getsignal(sig)` then `signal.signal(sig, self.request_shutdown)` for SIGTERM + SIGINT
-- [ ] `request_shutdown`: set `shutting_down = True`, call previous handler if `callable`
+- [x] `install`: save `signal.getsignal(sig)` then `signal.signal(sig, self.request_shutdown)` for SIGTERM + SIGINT
+- [x] `request_shutdown`: set `shutting_down = True`, call previous handler if `callable`
 
 **Verify**
-- [ ] `pytest tests/test_cp4.py -v` all green
-- [ ] (Optional) scale to 3 agents behind nginx; `history_length` keeps increasing (note for Q9)
-- [ ] No `NotImplementedError` left: `grep -rn NotImplementedError app/`
-- [ ] Commit: "Checkpoint 4"
+- [x] `pytest tests/test_cp4.py -v` all green
+- [x] (Optional) scale to 3 agents behind nginx; `history_length` keeps increasing (note for Q9)
+- [x] No `NotImplementedError` left: `grep -rn NotImplementedError app/`
+- [x] Commit: "Checkpoint 4"
 
 ## CP5 — Cloud Deployment (15)
 
